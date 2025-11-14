@@ -3,7 +3,7 @@ from pathlib import Path
 from .utils import load_json, load_lines, log, BASE_DIR
 from .post_generator import generate_post
 from .content_queue import save_post_to_queue
-
+from .image_generator import generate_image_for_post
 class AccountManager:
     def __init__(self):
         self.accounts_dir = BASE_DIR / "accounts"
