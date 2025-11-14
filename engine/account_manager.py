@@ -74,6 +74,12 @@ airtable_create("Posts", {
     "Hashtags": ", ".join(post.get("hashtags", [])),
     "Status": "ready"
        })
+# Update topic status to Used in Airtable
+for record in topics_raw:
+    if record["fields"]["Topic"] == topic:
+        airtable_update("Topics", record["id"], {"Status": "Used"})
+        break
+
 
     def run_all(self):
         accounts = self.get_all_accounts()
