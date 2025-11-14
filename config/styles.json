@@ -1,0 +1,22 @@
+{
+  "default": {
+    "text_style": "friendly, simple, helpful",
+    "image_style": "clean, bright, simple background",
+    "video_style": "simple slideshow, light and clean"
+  },
+  "country_living": {
+    "text_style": "warm, rustic, conversational, country lifestyle",
+    "image_style": "rustic, warm, natural light, cozy country home or outdoors",
+    "video_style": "slow panning shots, calm feel"
+  },
+  "hunting": {
+    "text_style": "practical, experienced, outdoorsy, no fluff",
+    "image_style": "outdoor, camo, marsh, woods, early morning light",
+    "video_style": "rugged, outdoors, steady motion"
+  },
+  "dogs": {
+    "text_style": "friendly, caring, practical dog owner tone",
+    "image_style": "happy dogs outside, natural light",
+    "video_style": "fun, simple panning shots of dogs"
+  }
+}
