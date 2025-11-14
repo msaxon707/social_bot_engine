@@ -1,11 +1,18 @@
+# engine/content_queue.py
+
 import json
 from datetime import datetime
 from pathlib import Path
 from .utils import BASE_DIR, ensure_dir, log
 
-def save_post_to_queue(account_name: str, topic: str, post: dict) -> Path:
+def save_post_to_queue(
+    account_name: str,
+    topic: str,
+    post: dict,
+    image_path: Path | None = None
+) -> Path:
     """
-    Save a generated post to the local content queue.
+    Save a generated post (and optional image) to the local content queue.
 
     Folder structure:
       /generated/<account_name>/<YYYY-MM-DD>/<HHMMSS>.json
@@ -26,8 +33,9 @@ def save_post_to_queue(account_name: str, topic: str, post: dict) -> Path:
         "title": post.get("title"),
         "description": post.get("description"),
         "hashtags": post.get("hashtags", []),
-        "status": "ready",          # later you can change to "posted", etc.
-        "platforms": []             # later fill with ["pinterest", "instagram", ...]
+        "status": "ready",          # later: scheduled / posted
+        "platforms": [],            # later: ["pinterest", "instagram", ...]
+        "image_path": str(image_path) if image_path else None
     }
 
     with open(file_path, "w", encoding="utf-8") as f:
