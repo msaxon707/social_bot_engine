@@ -1,6 +1,6 @@
 {
   "openai_model": "gpt-4.1-mini",
+  "default_style_key": "default",
   "max_title_length": 70,
-  "max_description_length": 500,
-  "default_style": "friendly, simple, helpful"
+  "max_description_length": 500
 }
