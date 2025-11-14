@@ -1,13 +1,19 @@
-from engine.post_generator import generate_post
+from engine.account_manager import AccountManager
 from engine.utils import log
 
 def main():
-    topic = "Example topic for testing the engine"
-    
-    post = generate_post(topic)
+    log("Starting multi-account engine...")
 
-    log("Generated Post:")
-    log(post)
+    manager = AccountManager()
+    results = manager.run_all()
+
+    log("----- SUMMARY FOR THIS RUN -----")
+    for r in results:
+        log(f"[{r['account']}] Topic: {r['topic']}")
+        log(f"Title: {r['post']['title']}")
+        log("---")
+
+    log("Engine finished.")
 
 if __name__ == "__main__":
     main()
