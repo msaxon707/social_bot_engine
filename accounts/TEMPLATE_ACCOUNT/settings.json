@@ -1,6 +1,7 @@
 {
-  "account_name": "TEMPLATE",
+  "account_name": "TEMPLATE_ACCOUNT",
   "niche": "general",
+  "style_key": "default",
   "style": "simple, conversational",
   "platforms": ["pinterest"],
   "daily_posts": 1
