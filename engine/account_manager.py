@@ -65,6 +65,15 @@ def load_account_settings(self, account_path: Path, account_name: str):
             "post": post,
             "queue_path": str(queue_path)
         }
+     # Save to Airtable "Posts" table
+airtable_create("Posts", {
+    "Account": [account_name],
+    "Topic": topic,
+    "Title": post.get("title"),
+    "Description": post.get("description"),
+    "Hashtags": ", ".join(post.get("hashtags", [])),
+    "Status": "ready"
+       })
 
     def run_all(self):
         accounts = self.get_all_accounts()
