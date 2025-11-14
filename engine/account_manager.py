@@ -16,16 +16,27 @@ class AccountManager:
                 accounts.append(folder)
         return accounts
 
-    def load_account_settings(self, account_path: Path):
-        settings = load_json(account_path / "settings.json")
-        topics = load_lines(account_path / "topics.txt")
-        affiliates = load_json(account_path / "affiliates.json")
+from .airtable_client import airtable_get, airtable_update
 
-        return {
-            "settings": settings,
-            "topics": topics,
-            "affiliates": affiliates
-        }
+def load_account_settings(self, account_path: Path, account_name: str):
+    """Load settings from settings.json + topics from Airtable."""
+    settings = load_json(account_path / "settings.json")
+
+    # Fetch topics only for this account
+    topics_raw = airtable_get("Topics")
+    topics = [
+        record["fields"]["Topic"]
+        for record in topics_raw
+        if "Account" in record["fields"]
+        and record["fields"]["Account"][0] == account_name
+        and record["fields"].get("Status") == "To Use"
+    ]
+
+    return {
+        "settings": settings,
+        "topics": topics
+    }
+
 
     def generate_for_account(self, account_path: Path):
         account_name = account_path.name
