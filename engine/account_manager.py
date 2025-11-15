@@ -13,6 +13,14 @@ class AccountManager:
     def __init__(self):
         self.accounts_dir = BASE_DIR / "accounts"
 
+        # Load Accounts table mapping
+        self.account_id_map = {}  # record_id → account_name
+        accounts_raw = airtable_get("Accounts")
+        for record in accounts_raw:
+            fields = record.get("fields", {})
+            name = fields.get("Name") or fields.get("Account") or record["id"]
+            self.account_id_map[record["id"]] = name
+
     def get_all_accounts(self):
         accounts = []
         for folder in self.accounts_dir.iterdir():
@@ -23,17 +31,25 @@ class AccountManager:
     def load_account_settings(self, account_path: Path, account_name: str):
         settings = load_json(account_path / "settings.json")
 
+        # --- Fetch Topics ---
         topics_raw = airtable_get("Topics")
         topics = []
+
         for record in topics_raw:
             fields = record.get("fields", {})
-            if (
-                fields.get("Account")
-                and fields["Account"][0] == account_name
-                and fields.get("Status") == "To Use"
-            ):
+
+            # Airtable returns the LINKED RECORD ID
+            linked_account_ids = fields.get("Account", [])
+
+            if not linked_account_ids:
+                continue
+
+            linked_id = linked_account_ids[0]
+            linked_name = self.account_id_map.get(linked_id)
+
+            if linked_name == account_name and fields.get("Status") == "To Use":
                 topics.append({
-                    "topic": fields["Topic"],
+                    "topic": fields.get("Topic"),
                     "id": record["id"]
                 })
 
