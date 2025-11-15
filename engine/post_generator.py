@@ -28,12 +28,15 @@ def generate_post(topic: str, style_key: str | None = None):
     Topic: {topic}
     Style: {text_style}
 
-    Return ONLY valid JSON with:
-      "title": short, clickable, max {settings["max_title_length"]} chars
-      "description": 2–4 sentence helpful text
-      "hashtags": list of 8–15 keyword hashtags (no # sign)
-    """
+    Return ONLY JSON. DO NOT wrap it in code fences. DO NOT include ```json.
+    Format must be:
 
+    {{
+      "title": "...",
+      "description": "...",
+      "hashtags": ["tag1","tag2"]
+    }}
+    """
     log(f"[POST_GENERATOR] Generating content for topic: {topic}")
 
     try:
@@ -44,6 +47,37 @@ def generate_post(topic: str, style_key: str | None = None):
     except Exception as e:
         log(f"[POST_GENERATOR] API ERROR: {e}")
         return None
+
+    # Extract raw text safely
+    try:
+        raw = response.output[0].content[0].text
+    except Exception as e:
+        log(f"[POST_GENERATOR] ERROR reading response: {e}")
+        return None
+
+    # --- CLEAN CODE FENCES HERE ---
+    cleaned = raw.strip()
+    cleaned = cleaned.replace("```json", "")
+    cleaned = cleaned.replace("```", "")
+    cleaned = cleaned.strip()
+
+    # Parse JSON safely
+    try:
+        data = json.loads(cleaned)
+    except Exception:
+        log("[POST_GENERATOR] ERROR: Model returned invalid JSON.")
+        log(f"[RAW OUTPUT]: {raw}")
+        return None
+
+    hashtags = data.get("hashtags", [])
+    hashtags = [f"#{tag.lstrip('#')}" for tag in hashtags]
+
+    return {
+        "title": data.get("title"),
+        "description": data.get("description"),
+        "hashtags": hashtags
+    }
+
 
     # Extract text safely
     try:
