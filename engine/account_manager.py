@@ -108,7 +108,7 @@ class AccountManager:
 
         # 5) Save to Airtable Posts
         airtable_create("Posts", {
-            "Account": [account_name],
+            "Account": [account_record_id],
             "Topic": topic,
             "Title": post.get("title"),
             "Description": post.get("description"),
