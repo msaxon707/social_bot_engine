@@ -1,16 +1,8 @@
 {
-  "enabled": true,
-  "post_type": "image",
-  "use_video": false,
-
-  "image": {
-    "style": "country life, rustic, farmhouse, cozy home aesthetic",
-    "resolution": "1024x1536"
-  },
-
-  "content": {
-    "max_title_length": 80,
-    "max_description_length": 500,
-    "hashtag_count": 8
-  }
+  "account_name": "pinterest_main",
+  "niche": "country_living",
+  "style_key": "country_living",
+  "style": "rustic, warm, natural",
+  "platforms": ["pinterest"],
+  "daily_posts": 1
 }
