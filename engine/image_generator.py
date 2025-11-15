@@ -48,7 +48,7 @@ def generate_image_for_post(account_name: str, topic: str, post: dict, style_key
         log(f"[{account_name}] Generating image for topic: {topic}")
 
         response = client.images.generate(
-            model="gpt-image-1",
+            model="gpt-image-latest",
             prompt=prompt,
             size="1024x1536",
             n=1
