@@ -1,1 +1,6 @@
+{
+  "auto_generate_posts": true,
+  "posts_per_run": 1,
+  "post_interval_minutes": 30
+}
 
