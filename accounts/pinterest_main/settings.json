@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "post_type": "image",
+  "use_video": false,
+
+  "image": {
+    "style": "country life, rustic, farmhouse, cozy home aesthetic",
+    "resolution": "1024x1536"
+  },
+
+  "content": {
+    "max_title_length": 80,
+    "max_description_length": 500,
+    "hashtag_count": 8
+  }
+}
