@@ -60,7 +60,7 @@ Return ONLY a JSON object with:
 
     # Normalize hashtags to include "#"
     tags = data.get("hashtags", [])
-    tags = [f"#{tag.lstrip('#')}" for tag in tags]
+    tags = ["#" + tag.lstrip("#") for tag in tags]
 
     return {
         "title": data.get("title"),
