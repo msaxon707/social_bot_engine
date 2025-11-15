@@ -13,18 +13,29 @@ class AccountManager:
     def __init__(self):
         self.accounts_dir = BASE_DIR / "accounts"
 
-        # Build mapping: Airtable record ID → account name
-        self.account_id_map = {}  # recXXXX → pinterest_main
-        self.account_name_to_id = {}  # pinterest_main → recXXXX
+        # Maps Airtable Account name -> Airtable record ID
+        self.account_name_to_id = {}
+        self.account_id_to_name = {}
 
-        accounts_raw = airtable_get("Accounts")
-        for record in accounts_raw:
-            record_id = record["id"]
+        # Load Airtable Account table so we can resolve linked record IDs
+        self._load_accounts_table()
+
+    def _load_accounts_table(self):
+        """
+        Loads Airtable 'Accounts' table to store record IDs for linking.
+        """
+        records = airtable_get("Accounts")
+
+        for record in records:
+            record_id = record.get("id")
             fields = record.get("fields", {})
             name = fields.get("Name") or fields.get("Account")
+
             if name:
-                self.account_id_map[record_id] = name
                 self.account_name_to_id[name] = record_id
+                self.account_id_to_name[record_id] = name
+
+        log(f"[ACCOUNTS] Loaded {len(self.account_name_to_id)} accounts from Airtable.")
 
     def get_all_accounts(self):
         accounts = []
@@ -36,23 +47,24 @@ class AccountManager:
     def load_account_settings(self, account_path: Path, account_name: str):
         settings = load_json(account_path / "settings.json")
 
+        # Get topics table
         topics_raw = airtable_get("Topics")
         topics = []
+
+        # Get Airtable Account record ID
+        account_record_id = self.account_name_to_id.get(account_name)
 
         for record in topics_raw:
             fields = record.get("fields", {})
 
             linked_accounts = fields.get("Account", [])
-            if not linked_accounts:
-                continue
+            topic_status = fields.get("Status")
 
-            record_account_id = linked_accounts[0]
-            mapped_name = self.account_id_map.get(record_account_id)
-
-            if mapped_name == account_name and fields.get("Status") == "To Use":
+            # Only include topics for this specific account
+            if linked_accounts and linked_accounts[0] == account_record_id and topic_status == "To Use":
                 topics.append({
                     "topic": fields.get("Topic"),
-                    "id": record["id"]
+                    "id": record.get("id")
                 })
 
         return {
@@ -79,10 +91,27 @@ class AccountManager:
 
         log(f"[{account_name}] Generating content for topic: {topic}")
 
+        # 1) Generate post (text)
         post = generate_post(topic, style_key)
-        image_path = generate_image_for_post(account_name, topic, post, style_key)
-        video_path = create_video_for_post(account_name, topic, post, image_path, style_key)
 
+        # 2) Generate image
+        image_path = generate_image_for_post(
+            account_name=account_name,
+            topic=topic,
+            post=post,
+            style_key=style_key
+        )
+
+        # 3) Generate video
+        video_path = create_video_for_post(
+            account_name=account_name,
+            topic=topic,
+            post=post,
+            image_path=image_path,
+            style_key=style_key
+        )
+
+        # Save locally
         queue_path = save_post_to_queue(
             account_name=account_name,
             topic=topic,
@@ -91,28 +120,5 @@ class AccountManager:
             video_path=video_path
         )
 
-        # Convert account name → Airtable record ID
+        # Airtable record ID for linked field
         account_record_id = self.account_name_to_id.get(account_name)
-
-        airtable_create("Posts", {
-            "Account": [account_record_id] if account_record_id else [],
-            "Topic": topic,
-            "Title": post.get("title"),
-            "Description": post.get("description"),
-            "Hashtags": ", ".join(post.get("hashtags", [])),
-            "Queue Path": str(queue_path),
-            "Status": "ready"
-        })
-
-        airtable_update("Topics", topic_id, {"Status": "Used"})
-
-        log(f"[{account_name}] Finished generating + saving content for: {topic}")
-
-        return {
-            "account": account_name,
-            "topic": topic,
-            "post": post,
-            "queue_path": str(queue_path),
-            "image_path": str(image_path) if image_path else None,
-            "video_path": str(video_path) if video_path else None
-        }
