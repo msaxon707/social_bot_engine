@@ -23,29 +23,29 @@ def generate_post(topic: str, style_key: str | None = None):
     text_style = get_style_text(style_key)
 
     prompt = f"""
-    You are generating SOCIAL MEDIA content.
+You are generating SOCIAL MEDIA content.
 
-    Topic: {topic}
-    Style: {text_style}
+Topic: {topic}
+Style: {text_style}
 
-    Return a JSON object with:
-      - title: short, clickable, max {settings["max_title_length"]} characters
-      - description: helpful, keyword-rich, 2–4 sentences
-      - hashtags: a list of 8–15 relevant hashtags (without # in the strings)
-    """
+Return ONLY a JSON object with:
+  - title: short + clickable (max {settings["max_title_length"]} chars)
+  - description: 2–4 sentences, keyword-rich
+  - hashtags: array of 8–15 short strings (no "#" in the strings)
+"""
 
     log(f"[POST_GENERATOR] Generating content for topic: {topic}")
 
-    response = client.responses.create(
+    # --- NEW OPENAI FORMAT ---
+    response = client.responses.parse(
         model=model,
-        input=prompt,
-        response_format={"type": "json_object"}
+        input=prompt
     )
 
-    content = response.output[0].content[0].text
-    data = json.loads(content)
+    # The model returns a parsed JSON object automatically
+    data = response.output_parsed
 
-    # Normalize hashtags to include leading '#'
+    # Normalize hashtags to include "#"
     tags = data.get("hashtags", [])
     tags = [f"#{tag.lstrip('#')}" for tag in tags]
 
