@@ -29,25 +29,38 @@ Topic: {topic}
 Style: {text_style}
 
 Return ONLY a JSON object with:
-  - title: short + clickable (max {settings["max_title_length"]} chars)
-  - description: 2–4 sentences, keyword-rich
-  - hashtags: array of 8–15 short strings (no "#" in the strings)
+  "title": short clickable title (max {settings["max_title_length"]} chars)
+  "description": 2–4 sentences, keyword-rich
+  "hashtags": array of 8–15 short strings (WITHOUT the #)
 """
 
     log(f"[POST_GENERATOR] Generating content for topic: {topic}")
 
-    # --- NEW OPENAI FORMAT ---
-    response = client.responses.parse(
+    # --- New OpenAI JSON mode ---
+    response = client.responses.create(
         model=model,
-        input=prompt
+        input=prompt,
+        response_format={"type": "json_object"},
     )
 
-    # The model returns a parsed JSON object automatically
-    data = response.output_parsed
+    # Extract the text safely
+    try:
+        raw = response.output[0].content[0].text
+    except Exception as e:
+        log(f"[POST_GENERATOR] ERROR: Could not extract text: {e}")
+        log(f"[POST_GENERATOR] Raw response: {response}")
+        return None
+
+    try:
+        data = json.loads(raw)
+    except Exception:
+        log("[POST_GENERATOR] ERROR: Model returned invalid JSON.")
+        log(f"RAW OUTPUT:\n{raw}")
+        return None
 
     # Normalize hashtags to include "#"
     tags = data.get("hashtags", [])
-    tags = [f"#{tag.lstrip('#')}" for tag in tags]
+    tags = [f\"#{tag.lstrip('#')}\" for tag in tags]
 
     return {
         "title": data.get("title"),
