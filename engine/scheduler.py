@@ -17,7 +17,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
     …
     return results          # return empty list instead of None
 
-
-
-if __name__ == "__main__":
-    run_once()
+rows = run_once()
+for r in rows:                 # safe even if rows == []
+    …
