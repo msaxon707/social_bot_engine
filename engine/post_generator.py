@@ -1,105 +1,38 @@
-import os
-import json
-from pathlib import Path
+import os, json, logging
+from datetime import datetime
 from openai import OpenAI
+from .utils import load_json, BASE_DIR
 
-from .utils import load_json, log, BASE_DIR
-
+log = logging.getLogger("postgen")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+def _style(key: str | None) -> str:
+    cfg = load_json(BASE_DIR / "config" / "styles.json")
+    return cfg.get(key or "default", {}).get("text_style", "friendly")
 
-def get_style_text(style_key: str | None):
-    config = load_json(BASE_DIR / "config" / "master_settings.json")
-    styles = load_json(BASE_DIR / "config" / "styles.json")
-
-    key = style_key or config.get("default_style_key", "default")
-    style_cfg = styles.get(key, styles.get("default"))
-    return style_cfg.get("text_style", "friendly, simple, helpful")
-
-
-def generate_post(topic: str, style_key: str | None = None):
-    settings = load_json(BASE_DIR / "config" / "master_settings.json")
-    model = settings.get("openai_model", "gpt-4.1-mini")
-    text_style = get_style_text(style_key)
-
-    prompt = f"""
-    You are generating SOCIAL MEDIA content.
-
-    Topic: {topic}
-    Style: {text_style}
-
-    Return ONLY JSON. DO NOT wrap it in code fences. DO NOT include ```json.
-    Format must be:
-
-    {{
-      "title": "...",
-      "description": "...",
-      "hashtags": ["tag1","tag2"]
-    }}
-    """
-    log(f"[POST_GENERATOR] Generating content for topic: {topic}")
-
+def generate_post(topic: str, style_key: str | None = None) -> dict | None:
+    model = "gpt-4o-mini"
+    prompt = (
+        f"Generate SOCIAL MEDIA content.\n\nTopic: {topic}\n"
+        f"Style: {_style(style_key)}\n\n"
+        "Return JSON with keys title, description (≤3 sentences), "
+        "hashtags (array 5-10, no #)."
+    )
     try:
-        response = client.responses.create(
-            model=model,
-            input=prompt
+        raw = (
+            client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+            )
+            .choices[0]
+            .message
+            .content
         )
-    except Exception as e:
-        log(f"[POST_GENERATOR] API ERROR: {e}")
-        return None
-
-    # Extract raw text safely
-    try:
-        raw = response.output[0].content[0].text
-    except Exception as e:
-        log(f"[POST_GENERATOR] ERROR reading response: {e}")
-        return None
-
-    # --- CLEAN CODE FENCES HERE ---
-    cleaned = raw.strip()
-    cleaned = cleaned.replace("```json", "")
-    cleaned = cleaned.replace("```", "")
-    cleaned = cleaned.strip()
-
-    # Parse JSON safely
-    try:
-        data = json.loads(cleaned)
-    except Exception:
-        log("[POST_GENERATOR] ERROR: Model returned invalid JSON.")
-        log(f"[RAW OUTPUT]: {raw}")
-        return None
-
-    hashtags = data.get("hashtags", [])
-    hashtags = [f"#{tag.lstrip('#')}" for tag in hashtags]
-
-    return {
-        "title": data.get("title"),
-        "description": data.get("description"),
-        "hashtags": hashtags
-    }
-
-
-    # Extract text safely
-    try:
-        raw = response.output[0].content[0].text
-    except Exception as e:
-        log(f"[POST_GENERATOR] ERROR reading response: {e}")
-        log(f"[RAW RESPONSE] {response}")
-        return None
-
-    # Parse JSON safely
-    try:
         data = json.loads(raw)
-    except Exception:
-        log("[POST_GENERATOR] ERROR: Model returned invalid JSON.")
-        log(f"[RAW OUTPUT]: {raw}")
+        data["hashtags"] = [f"#{h.lstrip('#')}" for h in data.get("hashtags", [])]
+        data["generated_at"] = datetime.utcnow().isoformat()
+        return data
+    except Exception as e:
+        log.error("OpenAI error: %s", e)
         return None
-
-    hashtags = data.get("hashtags", [])
-    hashtags = [f"#{tag.lstrip('#')}" for tag in hashtags]
-
-    return {
-        "title": data.get("title"),
-        "description": data.get("description"),
-        "hashtags": hashtags
-    }
