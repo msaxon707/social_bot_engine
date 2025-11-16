@@ -12,10 +12,11 @@ log = logging.getLogger("scheduler")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
-def run_once() -> None:
-    manager = AccountManager()
-    for acc in manager.get_all_accounts():
-        manager.generate_for_account(acc)
+        def run_once() -> list[tuple[str, str]]:
+    results: list[tuple[str, str]] = []
+    …
+    return results          # return empty list instead of None
+
 
 
 if __name__ == "__main__":
