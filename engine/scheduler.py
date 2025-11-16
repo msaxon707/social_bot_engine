@@ -1,31 +1,22 @@
+"""
+Run one scheduling pass, then exit.
+
+Invoke with:
+    python -m engine.scheduler
+on whatever schedule you prefer (cron, Coolify Scheduled Task, etc.).
+"""
+import logging
 from .account_manager import AccountManager
-from .utils import log, load_json, BASE_DIR
-from pathlib import Path
+
+log = logging.getLogger("scheduler")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
-def run_once():
-    """
-    Simple scheduler: for each account, generate up to 'daily_posts' posts.
-    You schedule this script via cron / Coolify (e.g. 1–3 times per day).
-    """
+def run_once() -> None:
     manager = AccountManager()
-    accounts = manager.get_all_accounts()
+    for acc in manager.get_all_accounts():
+        manager.generate_for_account(acc)
 
-    if not accounts:
-        log("No accounts found.")
-        return []
 
-    results = []
-
-    for account_path in accounts:
-        settings = load_json(account_path / "settings.json")
-        daily_posts = settings.get("daily_posts", 1)
-
-        log(f"[{account_path.name}] Target posts this run: {daily_posts}")
-
-        for _ in range(daily_posts):
-            result = manager.generate_for_account(account_path)
-            if result:
-                results.append(result)
-
-    return results
+if __name__ == "__main__":
+    run_once()
