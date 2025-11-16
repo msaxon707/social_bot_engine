@@ -28,7 +28,16 @@ class AccountManager:
     # ──────────────────────────────────────────────────────────
     def _next_topic(self, account_name: str) -> tuple[str, str] | None:
         formula = f"AND(Account='{account_name}',Status='To Use')"
-        recs = airtable_get("Topics?fields[]=Topic&fields[]=Account&fields[]=Status&filterByFormula={formula}")
+        from urllib.parse import quote_plus
+
+formula = f"AND(Account='{account_name}', Status='To Use')"
+url     = (
+    "Topics?"
+    "fields[]=Topic&fields[]=Account&fields[]=Status&"
+    f"filterByFormula={quote_plus(formula)}"
+)
+recs = airtable_get(url)
+
         if not recs:
             return None
         picked = random.choice(recs)
