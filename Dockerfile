@@ -12,4 +12,5 @@ COPY . .
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "run.py"]
+CMD ["tail", "-f", "/dev/null"]
+
