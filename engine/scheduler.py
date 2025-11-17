@@ -1,22 +1,32 @@
 """
-Run one scheduling pass, then exit.
-
-Invoke with:
-    python -m engine.scheduler
-on whatever schedule you prefer (cron, Coolify Scheduled Task, etc.).
+Scheduler — Runs one bot cycle (Airtable sync + post generation).
+Designed to be triggered via cron or Coolify Scheduled Task.
 """
+
 import logging
-from .account_manager import AccountManager
+from engine.account_manager import AccountManager
+from engine.post_generator import generate_posts
+from dotenv import load_dotenv
 
+load_dotenv()
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("scheduler")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
+def run_once():
+    """Run a single scheduling pass."""
+    log.info("Starting scheduled bot run...")
+    try:
+        account_manager = AccountManager()
+        accounts = account_manager.load_accounts()
+        for acc in accounts:
+            log.info(f"Processing account: {acc['name']}")
+            generate_posts(acc)
+        log.info("Bot run completed successfully ✅")
+    except Exception as e:
+        log.exception(f"Error during scheduled run: {e}")
+    finally:
+        log.info("Scheduler finished.")
 
-        def run_once() -> list[tuple[str, str]]:
-    results: list[tuple[str, str]] = []
-    …
-    return results          # return empty list instead of None
-
-rows = run_once()
-for r in rows:                 # safe even if rows == []
-    …
+if __name__ == "__main__":
+    run_once()
