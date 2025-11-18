@@ -18,7 +18,7 @@ def run_once():
     log.info("Starting scheduled bot run...")
     try:
         account_manager = AccountManager()
-        accounts = account_manager.load_accounts()
+        accounts = account_manager.get_all_accounts()
         for acc in accounts:
             log.info(f"Processing account: {acc['name']}")
             generate_posts(acc)
