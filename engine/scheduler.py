@@ -5,7 +5,7 @@ Designed to be triggered via cron or Coolify Scheduled Task.
 
 import logging
 from engine.account_manager import AccountManager
-from engine.post_generator import generate_posts
+from engine.post_generator import generate_post
 from dotenv import load_dotenv
 
 load_dotenv()
