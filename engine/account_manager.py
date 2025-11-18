@@ -64,6 +64,7 @@ class AccountManager:
             return
 
         # Save to Airtable "Posts"
+        log(f"[DEBUG] Final hashtags string: {', '.join([str(h) for h in post.get('hashtags', []) if h])}")
         airtable_create(
             "Posts",
             {
@@ -71,7 +72,7 @@ class AccountManager:
                 "Topic": topic_text,
                 "Title": post["title"],
                 "Description": post["description"],
-                "Hashtags": ", ".join(post["hashtags"]),
+                "Hashtags": ", ".join([str(h).strip() for h in post.get("hashtags", []) if h]),
                 "Status": "ready",
             },
         )
